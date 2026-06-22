@@ -83,7 +83,7 @@ Peak RAM usage: ~3.5 GB (Whisper 2 GB + MiniLM 0.1 GB + vector store 0.5 GB + ov
 | Translation / reasoning | Gemini 2.5 Flash-Lite | Free tier |
 | Summarization / QA | Gemini 2.5 Flash | Free tier |
 | Embeddings | all-MiniLM-L6-v2 | Apache 2.0 |
-| Vector store | pgvector or sqlite-vec | PostgreSQL / MIT |
+| Vector store | pgvector | PostgreSQL |
 | API | FastAPI | MIT |
 | UI | Gradio | Apache 2.0 |
 | Eval | RAGAS | Apache 2.0 |
@@ -95,7 +95,7 @@ Peak RAM usage: ~3.5 GB (Whisper 2 GB + MiniLM 0.1 GB + vector store 0.5 GB + ov
 ### Prerequisites
 
 - Python 3.10+
-- PostgreSQL 15+ with pgvector extension (or use sqlite-vec for zero-setup)
+- PostgreSQL 15+ with pgvector extension (run `docker compose up -d` for a ready instance)
 - FFmpeg (for audio extraction from video)
 - Tesseract OCR
 - A Google AI Studio API key (free, no credit card required)
@@ -216,10 +216,8 @@ All configuration is via environment variables (loaded from `.env`):
 # Required
 GOOGLE_API_KEY=your_gemini_api_key
 
-# Database (defaults to sqlite-vec for zero-setup)
-DB_BACKEND=sqlite          # or "postgres"
-DATABASE_URL=sqlite:///polyglotpipe.db
-# DATABASE_URL=postgresql://user:pass@localhost:5432/polyglotpipe
+# Database (pgvector via docker compose)
+DATABASE_URL=postgresql://polyglotpipe:polyglotpipe@localhost:5432/polyglotpipe
 
 # Model configuration
 WHISPER_MODEL=small        # tiny | small | medium
