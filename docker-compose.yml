@@ -1,0 +1,18 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: polyglotpipe-postgres
+    environment:
+      POSTGRES_USER: polyglotpipe
+      POSTGRES_PASSWORD: polyglotpipe
+      POSTGRES_DB: polyglotpipe
+    ports: ["5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U polyglotpipe"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:
