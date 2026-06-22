@@ -8,15 +8,26 @@ version = "0.0.1"
 description = "Multilingual Media Intelligence Pipeline"
 requires-python = ">=3.10"
 readme = "README.md"
-license = { text = "MIT" }
-dynamic = ["dependencies", "optional-dependencies"]
+license = "MIT"
+dynamic = ["dependencies"]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.4",
+    "mypy>=1.10",
+    "pytest>=8",
+    "pytest-asyncio>=0.23",
+    "pytest-cov>=5",
+    "testcontainers[postgres]>=4",
+    "pip-audit>=2.7",
+    "pre-commit>=3.7",
+]
 
 [tool.setuptools.packages.find]
 include = ["polyglotpipe*"]
 
 [tool.setuptools.dynamic]
 dependencies = { file = ["requirements.txt"] }
-optional-dependencies.dev = { file = ["requirements-dev.txt"] }
 
 [tool.ruff]
 line-length = 100
