@@ -9,8 +9,11 @@ import numpy as np
 import psycopg
 import pytest
 import pytest_asyncio
+from dotenv import load_dotenv
 
 from polyglotpipe.retrieval.config import Settings
+
+load_dotenv()
 from polyglotpipe.retrieval.embedder import Embedder
 from polyglotpipe.retrieval.store import SCHEMA_PATH, PgVectorStore
 
