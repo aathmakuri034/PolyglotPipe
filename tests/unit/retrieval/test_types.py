@@ -6,8 +6,14 @@ from polyglotpipe.retrieval.types import RetrievedChunk, SearchFilters
 
 def _chunk(**overrides: object) -> RetrievedChunk:
     base = dict(
-        id=1, content="hi", source_path="/a.pdf", source_lang="en",
-        target_lang="en", media_type="pdf", chunk_index=0, score=0.5,
+        id=1,
+        content="hi",
+        source_path="/a.pdf",
+        source_lang="en",
+        target_lang="en",
+        media_type="pdf",
+        chunk_index=0,
+        score=0.5,
     )
     base.update(overrides)
     return RetrievedChunk(**base)  # type: ignore[arg-type]

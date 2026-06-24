@@ -1,4 +1,5 @@
 """Verify dev environment: DB reachable, pgvector installed, schema present."""
+
 from __future__ import annotations
 
 import os
@@ -17,9 +18,7 @@ def main() -> None:
         ).fetchone()
         if ext is None:
             raise SystemExit("pgvector extension not installed")
-        tbl = conn.execute(
-            "SELECT to_regclass('public.documents')"
-        ).fetchone()
+        tbl = conn.execute("SELECT to_regclass('public.documents')").fetchone()
         if tbl is None or tbl[0] is None:
             raise SystemExit("documents table missing; run scripts/init_db.py")
     print(f"ok: pgvector={ext[0]}, documents table present", file=sys.stderr)

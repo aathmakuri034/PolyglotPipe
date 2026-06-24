@@ -23,6 +23,7 @@ class Embedder:
     def warmup(self) -> None:
         if self._model is None:
             from sentence_transformers import SentenceTransformer
+
             self._model = SentenceTransformer(self._model_name)
 
     def embed(self, texts: list[str]) -> NDArray[np.float32]:

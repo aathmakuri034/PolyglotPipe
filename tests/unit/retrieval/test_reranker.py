@@ -7,9 +7,14 @@ from polyglotpipe.retrieval.types import RetrievedChunk
 
 def _chunk(cid: int, content: str) -> RetrievedChunk:
     return RetrievedChunk(
-        id=cid, content=content, source_path=f"/{cid}.pdf",
-        source_lang="en", target_lang="en", media_type="pdf",
-        chunk_index=0, score=0.0,
+        id=cid,
+        content=content,
+        source_path=f"/{cid}.pdf",
+        source_lang="en",
+        target_lang="en",
+        media_type="pdf",
+        chunk_index=0,
+        score=0.0,
     )
 
 

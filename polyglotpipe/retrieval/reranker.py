@@ -20,10 +20,14 @@ class BgeReranker:
     def warmup(self) -> None:
         if self._model is None:
             from sentence_transformers import CrossEncoder
+
             self._model = CrossEncoder(self._model_name, device=self._device)
 
     def rerank(
-        self, query: str, chunks: list[RetrievedChunk], top_k: int = 5,
+        self,
+        query: str,
+        chunks: list[RetrievedChunk],
+        top_k: int = 5,
     ) -> list[RetrievedChunk]:
         if not chunks:
             return []
@@ -31,7 +35,7 @@ class BgeReranker:
         assert self._model is not None
         pairs = [(query, c.content) for c in chunks]
         try:
-            scores = self._model.predict(pairs, batch_size=self._batch_size)
+            scores = self._model.predict(pairs, batch_size=self._batch_size)  # type: ignore[arg-type]
         except Exception as exc:
             raise RerankerError(f"rerank failed: {exc}") from exc
         ranked = sorted(zip(chunks, scores, strict=True), key=lambda x: x[1], reverse=True)

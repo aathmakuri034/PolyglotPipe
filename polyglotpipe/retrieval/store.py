@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Sequence
+from typing import Any
 
 import numpy as np
 import psycopg
@@ -31,8 +32,7 @@ RETURNING id
 """
 
 _SELECT_COLS = (
-    "id, content, source_path, source_lang, target_lang, "
-    "media_type, timestamp, chunk_index"
+    "id, content, source_path, source_lang, target_lang, media_type, timestamp, chunk_index"
 )
 
 
@@ -41,12 +41,17 @@ class VectorStore(ABC):
     async def add_documents(self, docs: Sequence[Document]) -> list[int]: ...
     @abstractmethod
     async def search_dense(
-        self, query_embedding: NDArray[np.float32], top_k: int,
+        self,
+        query_embedding: NDArray[np.float32],
+        top_k: int,
         filters: SearchFilters | None,
     ) -> list[RetrievedChunk]: ...
     @abstractmethod
     async def search_lexical(
-        self, query: str, top_k: int, filters: SearchFilters | None,
+        self,
+        query: str,
+        top_k: int,
+        filters: SearchFilters | None,
     ) -> list[RetrievedChunk]: ...
 
 
@@ -54,7 +59,7 @@ class PgVectorStore(VectorStore):
     def __init__(self, settings: Settings, embedder: Embedder) -> None:
         self._settings = settings
         self._embedder = embedder
-        self._pool: AsyncConnectionPool | None = None  # type: ignore[type-arg]
+        self._pool: AsyncConnectionPool | None = None
 
     async def setup(self) -> None:
         self._pool = AsyncConnectionPool(
@@ -71,7 +76,7 @@ class PgVectorStore(VectorStore):
             await self._pool.close()
 
     @property
-    def _p(self) -> AsyncConnectionPool:  # type: ignore[type-arg]
+    def _p(self) -> AsyncConnectionPool:
         if self._pool is None:
             raise StoreError("setup() not called")
         return self._pool
@@ -88,32 +93,40 @@ class PgVectorStore(VectorStore):
         return ids
 
     async def _insert_batch(
-        self, batch: Sequence[Document], embeddings: NDArray[np.float32],
+        self,
+        batch: Sequence[Document],
+        embeddings: NDArray[np.float32],
     ) -> list[int]:
         rows: list[int] = []
         try:
-            async with self._p.connection() as conn:
-                async with conn.transaction():
-                    for doc, vec in zip(batch, embeddings, strict=True):
-                        meta = doc.metadata
-                        result = await conn.execute(
-                            _INSERT_SQL,
-                            (
-                                meta["source_path"], meta["source_lang"],
-                                meta["target_lang"], meta["media_type"],
-                                meta.get("timestamp"), meta["confidence"],
-                                meta["chunk_index"], doc.page_content, vec,
-                            ),
-                        )
-                        row = await result.fetchone()
-                        assert row is not None
-                        rows.append(int(row[0]))
+            async with self._p.connection() as conn, conn.transaction():
+                for doc, vec in zip(batch, embeddings, strict=True):
+                    meta = doc.metadata
+                    result = await conn.execute(
+                        _INSERT_SQL,
+                        (
+                            meta["source_path"],
+                            meta["source_lang"],
+                            meta["target_lang"],
+                            meta["media_type"],
+                            meta.get("timestamp"),
+                            meta["confidence"],
+                            meta["chunk_index"],
+                            doc.page_content,
+                            vec,
+                        ),
+                    )
+                    row = await result.fetchone()
+                    assert row is not None
+                    rows.append(int(row[0]))
         except psycopg.Error as exc:
             raise StoreError(f"add_documents failed: {exc}") from exc
         return rows
 
     async def search_dense(
-        self, query_embedding: NDArray[np.float32], top_k: int,
+        self,
+        query_embedding: NDArray[np.float32],
+        top_k: int,
         filters: SearchFilters | None,
     ) -> list[RetrievedChunk]:
         where_sql, params = (filters or SearchFilters()).to_sql()
@@ -129,16 +142,17 @@ class PgVectorStore(VectorStore):
                     "SET LOCAL hnsw.ef_search = %s",
                     (self._settings.hnsw_ef_search,),
                 )
-                cur = await conn.execute(
-                    sql, [query_embedding, *params, query_embedding, top_k]
-                )
+                cur = await conn.execute(sql, [query_embedding, *params, query_embedding, top_k])
                 rows = await cur.fetchall()
         except psycopg.Error as exc:
             raise StoreError(f"search_dense failed: {exc}") from exc
         return [_row_to_chunk(row) for row in rows]
 
     async def search_lexical(
-        self, query: str, top_k: int, filters: SearchFilters | None,
+        self,
+        query: str,
+        top_k: int,
+        filters: SearchFilters | None,
     ) -> list[RetrievedChunk]:
         where_sql, params = (filters or SearchFilters()).to_sql()
         sql = (
@@ -157,11 +171,15 @@ class PgVectorStore(VectorStore):
         return [_row_to_chunk(row) for row in rows]
 
 
-def _row_to_chunk(row: tuple[object, ...]) -> RetrievedChunk:
+def _row_to_chunk(row: tuple[Any, ...]) -> RetrievedChunk:
     return RetrievedChunk(
-        id=int(row[0]), content=str(row[1]), source_path=str(row[2]),  # type: ignore[arg-type]
-        source_lang=str(row[3]), target_lang=str(row[4]),
+        id=int(row[0]),
+        content=str(row[1]),
+        source_path=str(row[2]),
+        source_lang=str(row[3]),
+        target_lang=str(row[4]),
         media_type=str(row[5]),
         timestamp=None if row[6] is None else str(row[6]),
-        chunk_index=int(row[7]), score=float(row[8]),  # type: ignore[arg-type]
+        chunk_index=int(row[7]),
+        score=float(row[8]),
     )

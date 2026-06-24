@@ -1,4 +1,5 @@
 """Apply retrieval schema to the database pointed to by DATABASE_URL."""
+
 from __future__ import annotations
 
 import os
@@ -13,9 +14,7 @@ MIN_PGVECTOR = (0, 5, 0)
 
 
 def _check_pgvector_version(conn: psycopg.Connection[tuple[str, ...]]) -> None:
-    row = conn.execute(
-        "SELECT extversion FROM pg_extension WHERE extname = 'vector'"
-    ).fetchone()
+    row = conn.execute("SELECT extversion FROM pg_extension WHERE extname = 'vector'").fetchone()
     if row is None:
         return  # extension created below; version checked next run
     version = tuple(int(p) for p in row[0].split("."))

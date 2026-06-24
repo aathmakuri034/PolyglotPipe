@@ -19,10 +19,19 @@ from polyglotpipe.retrieval.store import PgVectorStore, VectorStore
 from polyglotpipe.retrieval.types import RetrievedChunk, SearchFilters
 
 __all__ = [
-    "Retriever", "VectorStore", "PgVectorStore", "Embedder",
-    "HybridRetriever", "BgeReranker",
-    "RetrievedChunk", "SearchFilters", "Settings",
-    "RetrievalError", "StoreError", "EmbeddingError", "RerankerError",
+    "BgeReranker",
+    "Embedder",
+    "EmbeddingError",
+    "HybridRetriever",
+    "PgVectorStore",
+    "RerankerError",
+    "RetrievalError",
+    "RetrievedChunk",
+    "Retriever",
+    "SearchFilters",
+    "Settings",
+    "StoreError",
+    "VectorStore",
 ]
 
 _log = structlog.get_logger(__name__)

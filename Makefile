@@ -8,7 +8,7 @@ typecheck:
 	mypy polyglotpipe/
 
 test:
-	pytest tests/unit/ --cov=polyglotpipe --cov-report=term-missing
+	pytest tests/unit/ --cov=polyglotpipe --cov-report=term-missing --cov-fail-under=80
 
 test-int:
 	pytest tests/integration/
