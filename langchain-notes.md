@@ -50,3 +50,40 @@ llm, prompt,
 chain : LLm chain
 
 stream lit
+
+
+chains/	Engineer A
+graph/	Engineer A
+providers/	Engineer A
+scripts/	Whoever wrote it
+tests/unit/	Matches source ownership
+tests/integration/	Whoever wrote it
+
+from langgraph.graph import StateGraph, START, END
+from typing_extensions import TypedDict
+from IPython.display import display, Image
+import os
+
+LangGraph workflows share data through a state object:
+class HelloWorldState(TypedDict):
+    message: str
+
+Nodes are just Python functions that perform tasks
+# def display_message_node(state: HelloWorldState) -> str:
+    '''A node function that takes the current state and returns a new state with a 
+    modified message.'''
+    state["message"] = f"Hello, {state['message']} from LangGraph!"
+    return state
+
+
+# Create a graph with our state schema
+graph = StateGraph(HelloWorldState)
+
+# Add nodes
+graph.add_node("message_node", display_message_node)
+# Define edges
+graph.set_entry_point("message_node")
+graph.set_finish_point("message_node")
+# Another way to define edges
+# graph.add_edge(START, "message_node")
+# graph.add_edge("message_node", END)
