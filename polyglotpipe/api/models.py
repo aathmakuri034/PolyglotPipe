@@ -316,3 +316,50 @@ class IngestResponse(BaseModel):
         default=None,
         description=("ISO-8601 UTC timestamp; ``None`` while ``status`` is QUEUED or RUNNING."),
     )
+
+
+# --- Ops / errors --------------------------------------------------------
+
+
+class ComponentHealth(BaseModel):
+    """Per-dependency health entry inside ``HealthResponse.components``."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    name: Annotated[str, StringConstraints(min_length=1)]
+    ok: bool
+    detail: str | None = None
+
+
+class HealthResponse(BaseModel):
+    """Body of ``GET /health``. ``ok`` is the logical AND of every component."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    ok: bool
+    version: Annotated[str, StringConstraints(min_length=1)]
+    components: list[ComponentHealth] = Field(default_factory=list)
+
+
+class ErrorCode(StrEnum):
+    """Stable error codes — also used as Prometheus label values."""
+
+    VALIDATION = "validation"
+    NOT_FOUND = "not_found"
+    RATE_LIMITED = "rate_limited"
+    UPSTREAM_GEMINI = "upstream_gemini"
+    STORE = "store"
+    EMBEDDING = "embedding"
+    RERANK = "rerank"
+    INTERNAL = "internal"
+
+
+class ErrorResponse(BaseModel):
+    """Uniform error envelope for every non-2xx API response."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    code: ErrorCode
+    message: Annotated[str, StringConstraints(min_length=1)]
+    details: dict[str, object] | None = None
+    request_id: Annotated[str, StringConstraints(min_length=1, max_length=64)] | None = None

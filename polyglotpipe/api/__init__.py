@@ -7,8 +7,12 @@ approval rules around shared files.
 
 from polyglotpipe.api.models import (
     Citation,
+    ComponentHealth,
     DocumentMetadata,
+    ErrorCode,
+    ErrorResponse,
     EvalRecord,
+    HealthResponse,
     IngestRequest,
     IngestResponse,
     IngestStats,
@@ -24,8 +28,12 @@ from polyglotpipe.api.models import (
 
 __all__ = [
     "Citation",
+    "ComponentHealth",
     "DocumentMetadata",
+    "ErrorCode",
+    "ErrorResponse",
     "EvalRecord",
+    "HealthResponse",
     "IngestRequest",
     "IngestResponse",
     "IngestStats",
