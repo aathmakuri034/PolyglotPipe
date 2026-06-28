@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from enum import StrEnum
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints
@@ -248,3 +249,70 @@ class EvalRecord(BaseModel):
     def from_jsonl(cls, line: str) -> EvalRecord:
         """Parse a single JSONL line."""
         return cls.model_validate_json(line)
+
+
+# --- Ingest --------------------------------------------------------------
+
+
+class IngestStatus(StrEnum):
+    """Terminal and intermediate states of an ingest run."""
+
+    QUEUED = "queued"
+    RUNNING = "running"
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+    SKIPPED = "skipped"
+
+
+class IngestRequest(BaseModel):
+    """Body of ``POST /ingest`` and the input to ``graph.nodes.ingest``.
+
+    ``path`` may point at a single file or a directory; ``recursive`` is
+    ignored when ``path`` is a file.
+    """
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    path: Annotated[str, StringConstraints(min_length=1)]
+    target_lang: LangCode = "en"
+    recursive: bool = True
+    resume_id: Annotated[str, StringConstraints(min_length=1, max_length=64)] | None = Field(
+        default=None,
+        description=(
+            "If set, resume a previously-checkpointed run instead of starting fresh. "
+            "Mirrors the README's ``python -m polyglotpipe.ingest --resume`` flag."
+        ),
+    )
+
+
+class IngestStats(BaseModel):
+    """Counts grouped by media type for one ingest run."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    audio: int = Field(default=0, ge=0)
+    pdf: int = Field(default=0, ge=0)
+    image: int = Field(default=0, ge=0)
+    text: int = Field(default=0, ge=0)
+    chunks_inserted: int = Field(default=0, ge=0)
+    chunks_skipped: int = Field(default=0, ge=0)
+
+
+class IngestResponse(BaseModel):
+    """Body of ``POST /ingest`` response and the terminal state recorded
+    on the LangGraph checkpoint at the end of an ingest run."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    run_id: Annotated[str, StringConstraints(min_length=1, max_length=64)]
+    status: IngestStatus
+    stats: IngestStats
+    errors: list[str] = Field(
+        default_factory=list,
+        description="One human-readable line per file that failed.",
+    )
+    started_at: str = Field(..., description="ISO-8601 UTC timestamp.")
+    finished_at: str | None = Field(
+        default=None,
+        description=("ISO-8601 UTC timestamp; ``None`` while ``status`` is QUEUED or RUNNING."),
+    )
