@@ -198,3 +198,53 @@ class QueryResult(BaseModel):
         ...,
         description="Opaque trace id (e.g. ULID) for log correlation.",
     )
+
+
+# --- Locked contract #3: Eval-dataset JSONL ------------------------------
+
+
+class EvalRecord(BaseModel):
+    """One row of the eval JSONL dataset consumed by ``eval/harness.py``.
+
+    The field layout mirrors RAGAS's expected dataframe columns
+    (``question``, ``ground_truth``, ``contexts``, ``answer``) plus the
+    language and provenance fields needed for the cross-lingual chrF++
+    translation-quality benchmark and per-slice reporting.
+    """
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    question: Annotated[
+        str,
+        StringConstraints(strip_whitespace=True, min_length=1, max_length=4000),
+    ]
+    ground_truth: Annotated[str, StringConstraints(min_length=1)]
+    contexts: list[Annotated[str, StringConstraints(min_length=1)]] = Field(
+        ...,
+        min_length=1,
+        description="Gold context passages used to compute context_precision.",
+    )
+    answer: str | None = Field(
+        default=None,
+        description=(
+            "Optional generated answer captured during a previous run "
+            "(used for replay / regression diffs)."
+        ),
+    )
+    source_lang: LangCode
+    target_lang: LangCode
+    media_type: MediaType
+    source_path: Annotated[str, StringConstraints(min_length=1)]
+    dataset_id: Annotated[str, StringConstraints(min_length=1, max_length=64)] = Field(
+        ...,
+        description="Identifies the eval slice (e.g. ``compliance-de-v1``).",
+    )
+
+    def to_jsonl(self) -> str:
+        """Serialize to a single JSON line (no trailing newline)."""
+        return self.model_dump_json()
+
+    @classmethod
+    def from_jsonl(cls, line: str) -> EvalRecord:
+        """Parse a single JSONL line."""
+        return cls.model_validate_json(line)

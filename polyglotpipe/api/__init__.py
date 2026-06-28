@@ -8,6 +8,7 @@ approval rules around shared files.
 from polyglotpipe.api.models import (
     Citation,
     DocumentMetadata,
+    EvalRecord,
     LangCode,
     MediaType,
     QueryFilters,
@@ -20,6 +21,7 @@ from polyglotpipe.api.models import (
 __all__ = [
     "Citation",
     "DocumentMetadata",
+    "EvalRecord",
     "LangCode",
     "MediaType",
     "QueryFilters",
