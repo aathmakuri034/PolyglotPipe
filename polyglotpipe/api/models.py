@@ -126,3 +126,75 @@ class QueryRequest(BaseModel):
         description="If True, apply the BGE cross-encoder reranker after RRF fusion.",
     )
     filters: QueryFilters | None = None
+
+
+# --- Locked contract #2b: QueryResult ------------------------------------
+
+
+class Citation(BaseModel):
+    """One retrieved chunk surfaced to the caller for citation grounding."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    source_path: Annotated[str, StringConstraints(min_length=1)]
+    source_lang: LangCode
+    media_type: MediaType
+    chunk_index: int = Field(..., ge=0)
+    timestamp: str | None = Field(default=None, max_length=32)
+    content: Annotated[str, StringConstraints(min_length=1)] = Field(
+        ...,
+        description="The cited text, post-translation if applicable.",
+    )
+    relevance_score: float = Field(
+        ...,
+        description="Final score from rerank (BGE) or RRF fusion if rerank=False.",
+    )
+
+
+class QueryLatency(BaseModel):
+    """Per-query latency breakdown in milliseconds. Mirrors the fields of
+    the structlog ``retrieve.complete`` event emitted by ``Retriever``."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    hybrid_ms: float = Field(..., ge=0.0)
+    rerank_ms: float = Field(..., ge=0.0)
+    generate_ms: float = Field(..., ge=0.0)
+    total_ms: float = Field(..., ge=0.0)
+
+
+class QueryUsage(BaseModel):
+    """Per-query resource usage. Feeds ``observability.cost_tracker`` and
+    Prometheus metrics."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    prompt_tokens: int = Field(..., ge=0)
+    completion_tokens: int = Field(..., ge=0)
+    embed_tokens: int = Field(default=0, ge=0)
+    cost_usd: float = Field(default=0.0, ge=0.0)
+
+
+class QueryResult(BaseModel):
+    """Body of ``POST /query`` response."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    answer: Annotated[str, StringConstraints(min_length=0)] = Field(
+        ...,
+        description=(
+            "Generated answer in ``target_lang``. May be empty when no citations were found."
+        ),
+    )
+    target_lang: LangCode
+    citations: list[Citation] = Field(default_factory=list)
+    detected_source_langs: list[LangCode] = Field(
+        default_factory=list,
+        description="Distinct ``source_lang`` values across the citations.",
+    )
+    latency: QueryLatency
+    usage: QueryUsage
+    request_id: Annotated[str, StringConstraints(min_length=1, max_length=64)] = Field(
+        ...,
+        description="Opaque trace id (e.g. ULID) for log correlation.",
+    )

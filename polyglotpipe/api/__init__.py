@@ -6,17 +6,25 @@ approval rules around shared files.
 """
 
 from polyglotpipe.api.models import (
+    Citation,
     DocumentMetadata,
     LangCode,
     MediaType,
     QueryFilters,
+    QueryLatency,
     QueryRequest,
+    QueryResult,
+    QueryUsage,
 )
 
 __all__ = [
+    "Citation",
     "DocumentMetadata",
     "LangCode",
     "MediaType",
     "QueryFilters",
+    "QueryLatency",
     "QueryRequest",
+    "QueryResult",
+    "QueryUsage",
 ]
