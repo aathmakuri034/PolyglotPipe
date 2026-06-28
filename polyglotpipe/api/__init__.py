@@ -9,10 +9,14 @@ from polyglotpipe.api.models import (
     DocumentMetadata,
     LangCode,
     MediaType,
+    QueryFilters,
+    QueryRequest,
 )
 
 __all__ = [
     "DocumentMetadata",
     "LangCode",
     "MediaType",
+    "QueryFilters",
+    "QueryRequest",
 ]

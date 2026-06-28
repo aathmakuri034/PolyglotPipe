@@ -80,3 +80,49 @@ class DocumentMetadata(BaseModel):
         ge=0,
         description="0-based index of this chunk within ``source_path``.",
     )
+
+
+# --- Locked contract #2a: QueryRequest -----------------------------------
+
+
+class QueryFilters(BaseModel):
+    """Optional narrowing of the corpus before retrieval. All set fields
+    are combined with AND. Mirrors ``polyglotpipe.retrieval.SearchFilters``
+    but lives in the public API layer so the retrieval module stays an
+    implementation detail."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    media_type: MediaType | None = None
+    source_lang: LangCode | None = None
+    source_path: Annotated[str, StringConstraints(min_length=1)] | None = None
+
+
+class QueryRequest(BaseModel):
+    """Body of ``POST /query`` and the input to ``graph.pipeline.run``.
+
+    The query string may be in any of the 15+ supported languages; the
+    answer is generated in ``target_lang`` (defaults to English).
+    """
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    query: Annotated[
+        str,
+        StringConstraints(strip_whitespace=True, min_length=1, max_length=4000),
+    ] = Field(..., description="User question; may be in any supported language.")
+    target_lang: LangCode = Field(
+        default="en",
+        description="Language of the generated answer.",
+    )
+    top_k: int = Field(
+        default=5,
+        ge=1,
+        le=50,
+        description="Number of citations to return.",
+    )
+    rerank: bool = Field(
+        default=True,
+        description="If True, apply the BGE cross-encoder reranker after RRF fusion.",
+    )
+    filters: QueryFilters | None = None
